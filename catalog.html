@@ -211,19 +211,15 @@
     .card-img.img-loaded { opacity: 1; }
     .img-done .img-skeleton { display: none; }
 
-    /* ── LOAD MORE ── */
-    .load-more-wrap {
-      text-align: center; padding: 8px 20px 60px;
+    /* ── INFINITE SCROLL SENTINEL ── */
+    #scroll-sentinel {
+      height: 1px; margin-bottom: 60px;
     }
-    .load-more-btn {
-      padding: 12px 36px; background: var(--accent); color: white;
-      border: none; border-radius: 50px; font-size: 0.9rem; font-weight: 600;
-      cursor: pointer; font-family: inherit;
-      transition: background 0.15s, transform 0.15s;
-      box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+    .scroll-loading {
+      text-align: center; padding: 20px; color: var(--muted); font-size: 0.85rem;
+      display: none;
     }
-    .load-more-btn:hover { background: #4338ca; transform: translateY(-2px); }
-    .load-more-btn:active { transform: translateY(0); }
+    .scroll-loading.visible { display: block; }
 
     /* ── NO RESULTS ── */
     #no-results {
@@ -310,9 +306,8 @@
   <h3>No games found</h3>
   <p>Try a different search or filter.</p>
 </div>
-<div class="load-more-wrap" id="load-more-wrap" style="display:none">
-  <button class="load-more-btn" id="load-more-btn">Load More</button>
-</div>
+<div class="scroll-loading" id="scroll-loading">Loading more games...</div>
+<div id="scroll-sentinel"></div>
 
 <!-- FOOTER -->
 <footer>
@@ -470,15 +465,13 @@ function buildCard(g) {
 }
 
 function renderPage() {
-  const grid     = document.getElementById('grid');
-  const none     = document.getElementById('no-results');
-  const count    = document.getElementById('count');
-  const lmWrap   = document.getElementById('load-more-wrap');
+  const grid    = document.getElementById('grid');
+  const none    = document.getElementById('no-results');
+  const count   = document.getElementById('count');
 
   if (currentList.length === 0) {
     grid.innerHTML = '';
     none.style.display = 'block';
-    lmWrap.style.display = 'none';
     count.textContent = 'No results';
     return;
   }
@@ -486,10 +479,13 @@ function renderPage() {
   none.style.display = 'none';
   const slice = currentList.slice(0, visibleCount);
   grid.innerHTML = slice.map(buildCard).join('');
-
-  const hasMore = visibleCount < currentList.length;
-  lmWrap.style.display = hasMore ? 'block' : 'none';
   count.textContent = `Showing ${slice.length} of ${currentList.length} games`;
+}
+
+function loadMore() {
+  if (visibleCount >= currentList.length) return;
+  visibleCount += PAGE_SIZE;
+  renderPage();
 }
 
 function render() {
@@ -534,10 +530,20 @@ document.getElementById('region-filter').addEventListener('click', e => {
 document.getElementById('search').addEventListener('input', render);
 document.getElementById('sort').addEventListener('change', render);
 
-document.getElementById('load-more-btn').addEventListener('click', () => {
-  visibleCount += PAGE_SIZE;
-  renderPage();
-});
+// Infinite scroll via IntersectionObserver
+const sentinel = document.getElementById('scroll-sentinel');
+const scrollLoading = document.getElementById('scroll-loading');
+const observer = new IntersectionObserver(entries => {
+  if (entries[0].isIntersecting && visibleCount < currentList.length) {
+    scrollLoading.classList.add('visible');
+    // Small delay so the loading indicator is briefly visible
+    setTimeout(() => {
+      loadMore();
+      scrollLoading.classList.remove('visible');
+    }, 200);
+  }
+}, { rootMargin: '200px' });
+observer.observe(sentinel);
 
 render();
 </script>
