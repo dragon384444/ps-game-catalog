@@ -1,0 +1,11 @@
+# Exclude original uncompressed photos (keep compressed opt/ versions)
+photo/*
+!photo/opt
+!photo/opt/**
+
+# Non-web files
+catalog.csv
+catalog.xlsx
+compress_images.ps1
+price*.txt
+Pht/

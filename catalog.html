@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PS Game Catalog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --text: #1a1a2e;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #4f46e5;
+      --accent-light: #eef2ff;
+      --shadow: 0 2px 8px rgba(0,0,0,0.08);
+      --shadow-hover: 0 8px 24px rgba(0,0,0,0.12);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+      color: white;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    .header h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+    .header p  { font-size: 1rem; opacity: 0.88; margin-bottom: 28px; }
+
+    .contact-bar {
+      display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+    }
+    .contact-btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 20px; border-radius: 50px; font-size: 0.875rem; font-weight: 600;
+      text-decoration: none; transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .contact-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.25); }
+    .btn-wa    { background: #25d366; color: white; }
+    .btn-ig    { background: linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); color: white; }
+    .btn-email { background: white; color: #4f46e5; }
+
+    /* ── CONTROLS ── */
+    .controls {
+      max-width: 1200px; margin: 0 auto; padding: 28px 20px 0;
+    }
+
+    .search-wrap {
+      position: relative; margin-bottom: 20px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none;
+    }
+    #search {
+      width: 100%; padding: 12px 14px 12px 42px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 0.95rem; font-family: inherit; background: white;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    #search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+
+    .filter-row {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      align-items: center; margin-bottom: 14px;
+    }
+    .filter-label { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-right: 2px; }
+
+    .pill-group { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pill {
+      padding: 6px 14px; border-radius: 50px; font-size: 0.82rem; font-weight: 500;
+      border: 1.5px solid var(--border); background: white; cursor: pointer;
+      transition: all 0.15s; color: var(--muted);
+    }
+    .pill:hover  { border-color: var(--accent); color: var(--accent); }
+    .pill.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    .meta-row {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 10px; margin-bottom: 20px;
+    }
+    #count { font-size: 0.85rem; color: var(--muted); }
+
+    #sort {
+      padding: 7px 12px; border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 0.85rem; font-family: inherit; background: white; cursor: pointer;
+      color: var(--text); outline: none;
+    }
+    #sort:focus { border-color: var(--accent); }
+
+    /* ── GRID ── */
+    .grid {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--card-bg); border-radius: 14px;
+      box-shadow: var(--shadow); overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: transform 0.18s, box-shadow 0.18s;
+      border: 1.5px solid var(--border);
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+    .card.sold-out { opacity: 0.55; }
+
+    /* ── CARD IMAGE & OVERLAYS ── */
+    .card-img-wrap {
+      position: relative; aspect-ratio: 4/5; background: #e5e7eb;
+      flex-shrink: 0; display: block; overflow: hidden; text-decoration: none;
+    }
+    .card-img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+      transition: transform 0.35s ease;
+    }
+    .card-img-placeholder {
+      width: 100%; height: 100%; display: flex; align-items: center;
+      justify-content: center; font-size: 3rem; color: #9ca3af;
+    }
+    .card:hover .card-img { transform: scale(1.06); }
+
+    /* badges pinned top-left */
+    .card-overlay-top {
+      position: absolute; top: 10px; left: 10px; right: 10px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 6px; pointer-events: none;
+    }
+    .card-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    /* title + price gradient at bottom */
+    .card-overlay-bottom {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 36px 12px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.4) 60%, transparent 100%);
+      pointer-events: none;
+    }
+    .card-name {
+      font-size: 0.9rem; font-weight: 700; line-height: 1.35;
+      color: #fff; margin-bottom: 5px;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+    .price {
+      font-size: 1rem; font-weight: 800; color: #fde68a;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+    }
+
+    .badge {
+      padding: 3px 9px; border-radius: 50px; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.03em; text-transform: uppercase; color: white;
+      backdrop-filter: blur(4px);
+    }
+    .badge-ps5   { background: rgba(0,112,204,0.9); }
+    .badge-ps4   { background: rgba(79,70,229,0.9); }
+    .badge-switch{ background: rgba(220,38,38,0.9); }
+    .badge-psvr  { background: rgba(124,58,237,0.9); }
+    .badge-ps4vr { background: rgba(124,58,237,0.9); }
+    .badge-amiibo{ background: rgba(234,88,12,0.9); }
+    .badge-novel { background: rgba(22,163,74,0.9); }
+    .badge-other { background: rgba(107,114,128,0.9); }
+
+    .badge-region-global { background: rgba(8,145,178,0.9); }
+    .badge-region-jp     { background: rgba(219,39,119,0.9); }
+
+    .sold-out-badge {
+      padding: 3px 9px; border-radius: 50px; font-size: 0.68rem; font-weight: 700;
+      background: rgba(239,68,68,0.9); color: white; text-transform: uppercase;
+    }
+
+    .card-action {
+      padding: 10px 12px 12px;
+    }
+    .order-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; padding: 9px 16px; border-radius: 8px;
+      background: var(--accent); color: white; font-size: 0.82rem; font-weight: 600;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .order-btn:hover { background: #4338ca; }
+    .card.sold-out .order-btn { background: #9ca3af; pointer-events: none; }
+
+    /* ── SKELETON SHIMMER ── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .img-skeleton {
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+      background-size: 600px 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    .card-img {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .card-img.img-loaded { opacity: 1; }
+    .img-done .img-skeleton { display: none; }
+
+    /* ── LOAD MORE ── */
+    .load-more-wrap {
+      text-align: center; padding: 8px 20px 60px;
+    }
+    .load-more-btn {
+      padding: 12px 36px; background: var(--accent); color: white;
+      border: none; border-radius: 50px; font-size: 0.9rem; font-weight: 600;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.15s, transform 0.15s;
+      box-shadow: 0 2px 8px rgba(79,70,229,0.3);
+    }
+    .load-more-btn:hover { background: #4338ca; transform: translateY(-2px); }
+    .load-more-btn:active { transform: translateY(0); }
+
+    /* ── NO RESULTS ── */
+    #no-results {
+      display: none; text-align: center; padding: 80px 20px;
+      color: var(--muted); font-size: 1rem;
+    }
+    #no-results h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center; padding: 28px 20px;
+      border-top: 1px solid var(--border); color: var(--muted); font-size: 0.82rem;
+      background: white;
+    }
+    footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1>🎮 PS Game Catalog</h1>
+  <p>Browse my collection — PS4, PS5, Switch &amp; more. DM to order!</p>
+  <div class="contact-bar">
+    <a class="contact-btn btn-wa" href="https://wa.me/6281331494441?text=Halo,%20saya%20mau%20order%20game" target="_blank" rel="noopener">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp
+    </a>
+    <a class="contact-btn btn-ig" href="https://instagram.com/rafif_nurmanda" target="_blank" rel="noopener">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      Instagram
+    </a>
+    <a class="contact-btn btn-email" href="mailto:rafif.nurmanda@gmail.com?subject=Order%20Game" target="_blank" rel="noopener">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+      Email
+    </a>
+  </div>
+</header>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="search-wrap">
+    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/>
+    </svg>
+    <input id="search" type="text" placeholder="Search game title..." autocomplete="off" />
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-label">Console</span>
+    <div class="pill-group" id="console-filter">
+      <button class="pill active" data-console="all">All</button>
+      <button class="pill" data-console="PS5">PS5</button>
+      <button class="pill" data-console="PS4">PS4</button>
+      <button class="pill" data-console="Switch">Switch</button>
+      <button class="pill" data-console="PSVR">PSVR</button>
+      <button class="pill" data-console="Amiibo">Amiibo</button>
+      <button class="pill" data-console="Novel">Novel</button>
+    </div>
+  </div>
+
+  <div class="filter-row">
+    <span class="filter-label">Region</span>
+    <div class="pill-group" id="region-filter">
+      <button class="pill active" data-region="all">All</button>
+      <button class="pill" data-region="Global">Global</button>
+      <button class="pill" data-region="JP">Japan</button>
+    </div>
+  </div>
+
+  <div class="meta-row">
+    <span id="count"></span>
+    <select id="sort">
+      <option value="name">Sort: A – Z</option>
+      <option value="price-asc">Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+    </select>
+  </div>
+</div>
+
+<!-- GRID -->
+<main class="grid" id="grid"></main>
+<div id="no-results">
+  <h3>No games found</h3>
+  <p>Try a different search or filter.</p>
+</div>
+<div class="load-more-wrap" id="load-more-wrap" style="display:none">
+  <button class="load-more-btn" id="load-more-btn">Load More</button>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  &copy; 2025 <strong>Rafif Nurmanda</strong> &mdash; All prices in IDR (thousands).
+  Questions? <a href="https://wa.me/6281331494441" target="_blank">Chat on WhatsApp</a>
+</footer>
+
+<script>
+const GAMES = [
+  // ── GLOBAL ──
+  { name: "Amiibo Splatoon 3 3-in-1 Pack",                    console: "Amiibo", region: "Global", price: 500,  stock: 1,  img: "photo/amiibo splatoon 3 3 in 1 pack.jpg" },
+  { name: "Assassin's Creed Origins",                          console: "PS4",    region: "Global", price: 130,  stock: 1,  img: "photo/Assassin's Creed Origins ps4.jpg" },
+  { name: "Battlefield 1",                                     console: "PS4",    region: "Global", price: 150,  stock: 1,  img: "photo/Battlefield 1.jpg" },
+  { name: "Battlefield 6",                                     console: "PS5",    region: "Global", price: 700,  stock: 1,  img: "photo/battlefield 6 ps5.png" },
+  { name: "Call of Duty Black Ops III",                        console: "PS4",    region: "Global", price: 140,  stock: 1,  img: "photo/Call of Duty Black Ops III ps4.jpg" },
+  { name: "Clair Obscur Expedition 33",                        console: "PS5",    region: "Global", price: 700,  stock: 1,  img: "photo/Clair Obscur Expedition 33 ps5.jpg" },
+  { name: "Death Stranding",                                   console: "PS4",    region: "Global", price: 170,  stock: 1,  img: "photo/death stranding ps4.jpg" },
+  { name: "Fallout 76",                                        console: "PS4",    region: "Global", price: 140,  stock: 1,  img: "photo/Fallout 76 ps4.jpg" },
+  { name: "Farpoint PSVR Aim Controller Bundle",               console: "PSVR",   region: "Global", price: 600,  stock: 1,  img: "photo/Farpoint PlayStation VR Aim Controller Bundle ps4 vr.jpg" },
+  { name: "Far Cry 5",                                         console: "PS4",    region: "Global", price: 160,  stock: 1,  img: "photo/far cry 5 ps4.jpg" },
+  { name: "Final Fantasy VII Remake",                          console: "PS4",    region: "Global", price: 190,  stock: 1,  img: "photo/Final Fantasy VII 7 Remake ps4.jpg" },
+  { name: "Final Fantasy XVI",                                 console: "PS5",    region: "Global", price: 370,  stock: 2,  img: "photo/Final Fantasy XVI 16 ps5.jpg" },
+  { name: "Game Builder Garage Bundle",                        console: "Switch", region: "Global", price: 400,  stock: 1,  img: "photo/Game Builder Garage programming game bundle nintendo switch.jpg" },
+  { name: "Gran Turismo Sport",                                console: "PS4",    region: "Global", price: 180,  stock: 1,  img: "photo/Gran Turismo Sport ps4.jpg" },
+  { name: "Gran Turismo Sport (PS4 VR)",                       console: "PS4",    region: "Global", price: 180,  stock: 1,  img: "photo/Gran Turismo Sport ps4 vr.jpg" },
+  { name: "Gundam Breaker 4",                                  console: "PS5",    region: "Global", price: 350,  stock: 2,  img: "photo/GUNDAM BREAKER 4 ps5.jpg" },
+  { name: "Hatsune Miku Project Diva X",                       console: "PS4",    region: "Global", price: 500,  stock: 2,  img: "photo/Hatsune Miku Project Diva X ps4.jpg" },
+  { name: "Jujutsu Kaisen Cursed Clash",                       console: "PS5",    region: "Global", price: 450,  stock: 1,  img: "photo/Jujutsu Kaisen Cursed Clash ps5.png" },
+  { name: "Kirby and the Forgotten Land",                      console: "Switch", region: "Global", price: 520,  stock: 3,  img: "photo/Kirby and the Forgotten Land switch.jpg" },
+  { name: "Lost Soul Aside",                                   console: "PS5",    region: "Global", price: 450,  stock: 2,  img: "photo/Lost Soul Aside ps5.jpg" },
+  { name: "Mario Party Superstars",                            console: "Switch", region: "Global", price: 430,  stock: 4,  img: "photo/mario party superstars switch.jpg" },
+  { name: "Mario Kart 8 Deluxe",                               console: "Switch", region: "Global", price: 480,  stock: 2,  img: "photo/Mario Kart 8 Deluxe mk8d switch.jpg" },
+  { name: "Metal Gear Solid Delta: Snake Eater",               console: "PS5",    region: "Global", price: 550,  stock: 1,  img: "photo/METAL GEAR SOLID delta \u0394 SNAKE EATER ps5.jpg" },
+  { name: "Monster Hunter World",                              console: "PS4",    region: "Global", price: 80,   stock: 2,  img: "photo/Monster Hunter World ps4.jpg" },
+  { name: "Monster Hunter Wilds",                              console: "PS5",    region: "Global", price: 450,  stock: 10, img: "photo/monster hunter wilds ps5.jpg" },
+  { name: "New Gundam Breaker",                                console: "PS4",    region: "Global", price: 100,  stock: 1,  img: "photo/New Gundam Breaker ps4.jpg" },
+  { name: "NieR: Automata",                                    console: "PS4",    region: "Global", price: 220,  stock: 1,  img: "photo/NieR Automata ps4.jpg" },
+  { name: "NieR Replicant ver.1.22",                           console: "PS4",    region: "Global", price: 270,  stock: 1,  img: "photo/NieR Replicant ver.1.22474487139 ps4.jpg" },
+  { name: "Persona 5",                                         console: "PS4",    region: "Global", price: 110,  stock: 1,  img: "photo/Persona 5 ps4.png" },
+  { name: "Red Dead Redemption 2",                             console: "PS4",    region: "Global", price: 280,  stock: 1,  img: "photo/Red Dead Redemption 2 ps4.jpg" },
+  { name: "Slime Isekai Chronicles",                           console: "PS5",    region: "Global", price: 450,  stock: 2,  img: "photo/That Time I Got Reincarnated as a Slime ISEKAI Chronicles tensura tensai slime ps5.jpg" },
+  { name: "Ghost Recon Breakpoint",                            console: "PS4",    region: "Global", price: 200,  stock: 2,  img: "photo/Tom Clancy's Ghost Recon Breakpoint ps4.png" },
+  { name: "Rainbow Six Siege",                                 console: "PS4",    region: "Global", price: 80,   stock: 1,  img: "photo/Tom Clancy's Rainbow Six Siege ps4.jpg" },
+  { name: "Rainbow Six Siege v2",                              console: "PS4",    region: "Global", price: 80,   stock: 1,  img: "photo/Tom Clancy's Rainbow Six Siege ps4 v2.jpg" },
+  { name: "Winning Eleven 2016",                               console: "PS4",    region: "Global", price: 200,  stock: 1,  img: "photo/winning eleven 2016 ps4.jpg" },
+  { name: "Tom Clancy's The Division",                         console: "PS4",    region: "Global", price: 80,   stock: 1,  img: "photo/tom clancys the division ps4.jpg" },
+  { name: "Anthem",                                            console: "PS4",    region: "Global", price: 110,  stock: 1,  img: "photo/anthem ps4.jpg" },
+  { name: "Spider-Man Game of the Year",                       console: "PS4",    region: "Global", price: 220,  stock: 1,  img: "photo/spiderman game of the year goty ps4.jpg" },
+  { name: "Sword Art Online Last Recollection Limited Edition",console: "PS4",    region: "Global", price: 700,  stock: 1,  img: "photo/Sword Art Online Last Recollection limited Edition ps4.jpg" },
+  { name: "One Piece Odyssey",                                 console: "PS4",    region: "Global", price: 200,  stock: 1,  img: "photo/one piece odyssey ps4.jpg" },
+  // ── JAPAN ──
+  { name: "Atelier Ryza Premium Box",                          console: "PS4",    region: "JP",     price: 700,  stock: 1,  img: "photo/Atelier Ryza Premium Box ps4 jp.jpg" },
+  { name: "Battlefield 4 Premium Edition",                     console: "PS4",    region: "JP",     price: 150,  stock: 1,  img: "photo/Battlefield 4 premium edition ps4 jp.jpg" },
+  { name: "Call of Duty: Infinite Warfare",                    console: "PS4",    region: "JP",     price: 120,  stock: 1,  img: "photo/Call of Duty Infinite Warfare ps4 jp.jpg" },
+  { name: "Call of Duty: Modern Warfare",                      console: "PS4",    region: "JP",     price: 300,  stock: 2,  img: "photo/Call of Duty Modern Warfare ps4 jp.jpg" },
+  { name: "Call of Duty: WWII",                                console: "PS4",    region: "JP",     price: 250,  stock: 1,  img: "photo/call of duty world war 2 ps4 jp.jpg" },
+  { name: "Dragon Quest XI",                                   console: "PS4",    region: "JP",     price: 150,  stock: 1,  img: "photo/Dragon Quest XI ps4 jp.jpg" },
+  { name: "Elden Ring",                                        console: "PS4",    region: "JP",     price: 400,  stock: 1,  img: "photo/ELDEN RING \u30a8\u30eb\u30c7\u30f3\u30ea\u30f3\u30b0 ps4.png" },
+  { name: "Fate/Apocrypha Novel",                              console: "Novel",  region: "JP",     price: 50,   stock: 1,  img: "photo/fate apocrypha novel jp.png" },
+  { name: "Fate/EXTELLA Regalia Box",                          console: "PS4",    region: "JP",     price: 400,  stock: 2,  img: "photo/Fate EXTELLA REGALIA BOX ps4 jp.jpg" },
+  { name: "God Eater 3",                                       console: "PS4",    region: "JP",     price: 130,  stock: 1,  img: "photo/God Eater 3 ps4 jp.jpg" },
+  { name: "Power Pros 2016",                                   console: "PS4",    region: "JP",     price: 100,  stock: 1,  img: "photo/Jikkyou Powerful Pro Yakyuu Power Pros 2016 ps4 jp.jpg" },
+  { name: "Power Pros 2018",                                   console: "PS4",    region: "JP",     price: 100,  stock: 1,  img: "photo/Jikkyou Powerful Pro Yakyuu Power Pros 2018 ps4 jp.jpg" },
+  { name: "Kingdom Hearts III",                                console: "PS4",    region: "JP",     price: 150,  stock: 2,  img: "photo/Kingdom Hearts III ps4 jp.png" },
+  { name: "KonoSuba: Greedy Game Limited Edition",             console: "PS4",    region: "JP",     price: 400,  stock: 1,  img: "photo/KonoSuba Kono Subarashii Sekai ni Shukufuku o Judgment on this Greedy Game Limited Edition ps4 jp.jpg" },
+  { name: "K Project: Side Red/Blue Novel",                    console: "Novel",  region: "JP",     price: 50,   stock: 1,  img: "photo/k project side red blue.png" },
+  { name: "Made in Abyss: Binary Star",                        console: "PS4",    region: "JP",     price: 300,  stock: 1,  img: "photo/Made in Abyss Binary Star Falling into Darkness ps4 jp.jpg" },
+  { name: "New Gundam Breaker (JP)",                           console: "PS4",    region: "JP",     price: 100,  stock: 1,  img: "photo/New Gundam Breaker ps4 jp.jpg" },
+  { name: "One Piece: Pirate Warriors 3",                      console: "PS4",    region: "JP",     price: 160,  stock: 1,  img: "photo/one piece pirate warriors 3 ps4 jp.png" },
+  { name: "Overlord Novel Vol. 1\u201314",                     console: "Novel",  region: "JP",     price: 50,   stock: 1,  img: "photo/overlord novel jp volume 1-14.jpg" },
+  { name: "Persona 5 (JP)",                                    console: "PS4",    region: "JP",     price: 110,  stock: 1,  img: "photo/persona 5 ps4 jp.jpg" },
+  { name: "Sakura Wars First Limited Edition",                 console: "PS4",    region: "JP",     price: 600,  stock: 1,  img: "photo/sakura wars Shin Sakura Taisen First Limited Edition ps4 jp.jpg" },
+  { name: "Steins;Gate",                                       console: "PS4",    region: "JP",     price: 180,  stock: 1,  img: "photo/Steins;Gate Steins Gate  ps4 jp.jpg" },
+  { name: "SAO: Fatal Bullet Limited Edition",                 console: "PS4",    region: "JP",     price: 400,  stock: 1,  img: "photo/Sword Art Online Fatal Bullet Limited Edition ps4 jp.jpg" },
+  { name: "Sen no Kiseki IV Eternal Edition",                  console: "PS4",    region: "JP",     price: 600,  stock: 1,  img: "photo/The Eiyuu Densetsu Sen no Kiseki IV - The End of Saga - Eternal Edition ps4 jp.jpg" },
+  { name: "Gungrave VR Limited Edition",                       console: "PS4",    region: "JP",     price: 400,  stock: 1,  img: "photo/The Gungrave VR Complete Edition Limited Edition ps4 jp.jpg" },
+  { name: "Idolmaster: Platinum Stars Box",                    console: "PS4",    region: "JP",     price: 500,  stock: 1,  img: "photo/The Idolmaster Platinum Stars Platinum Box ps4 jp.jpg" },
+  { name: "The Last Guardian Limited Edition",                 console: "PS4",    region: "JP",     price: 200,  stock: 1,  img: "photo/The Last Guardian Limited Edition ps4 jp.jpg" },
+  { name: "The Legend of Heroes 3",                            console: "PS4",    region: "JP",     price: 250,  stock: 1,  img: "photo/The Legend of Heroes 3 ps4 jp.jpg" },
+  { name: "The Legend of Heroes 4",                            console: "PS4",    region: "JP",     price: 250,  stock: 1,  img: "photo/The Legend of Heroes 4 ps4 jp.jpg" },
+  { name: "Quintessential Quintuplets Limited",                console: "Switch", region: "JP",     price: 500,  stock: 1,  img: "photo/The Quintessential Quintuplets \u222c Natsu no Omoide mo Gotoubun switch 5-Toubun no Hanayome Natsu no Omoide mo Gotoubun Limited Edition switch jp.jpg" },
+  { name: "Tsukihime Limited Edition",                         console: "PS4",    region: "JP",     price: 500,  stock: 1,  img: "photo/Tsukihime -A piece of blue glass moon- Limited Edition ps4 jp.jpg" },
+  { name: "Uncharted 4 (JP)",                                  console: "PS4",    region: "JP",     price: 150,  stock: 1,  img: "photo/Uncharted The Pirate King and the Last Treasure Uncharted 4 A Thief's End ps4 jp.jpg" },
+  { name: "World of Final Fantasy",                            console: "PS4",    region: "JP",     price: 130,  stock: 1,  img: "photo/World of Final Fantasy ps4 jp.jpg" },
+  { name: "Tales of Arise Premium Edition",                    console: "PS4",    region: "JP",     price: 700,  stock: 1,  img: "photo/tales of arise premium edition ps4.jpg" },
+  { name: "Super Neptunia RPG Hero Edition",                   console: "PS4",    region: "JP",     price: 600,  stock: 1,  img: "photo/Super Neptunia RPG hero edition ps4.jpg" },
+];
+
+const WA = "https://wa.me/6281331494441?text=";
+const PAGE_SIZE = 16;
+
+let activeConsole = 'all';
+let activeRegion  = 'all';
+let currentList   = [];
+let visibleCount  = 0;
+
+// Convert original photo path → compressed opt/ path (same name, always .jpg)
+function optImg(path) {
+  if (!path) return path;
+  const filename = path.split('/').pop();
+  const basename = filename.replace(/\.[^.]+$/, '');
+  return 'photo/opt/' + basename + '.jpg';
+}
+
+function badgeClass(c) {
+  const map = { PS5:'ps5', PS4:'ps4', Switch:'switch', PSVR:'psvr', 'PS4 VR':'ps4vr', Amiibo:'amiibo', Novel:'novel' };
+  return 'badge-' + (map[c] || 'other');
+}
+
+function formatPrice(p) {
+  return 'Rp ' + p.toLocaleString('id-ID') + '.000';
+}
+
+function buildCard(g) {
+  const soldOut = g.stock === 0;
+  const waMsg = encodeURIComponent(`Halo, saya tertarik membeli: ${g.name} (${g.console} - ${g.region}) Rp${g.price}.000. Apakah masih tersedia?`);
+  const waIcon = `<svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>`;
+
+  const src = optImg(g.img);
+
+  const imgInner = g.img
+    ? `<div class="img-skeleton"></div>
+       <img class="card-img" src="${src}" alt="${g.name}"
+            loading="lazy" decoding="async"
+            onload="this.classList.add('img-loaded');this.parentElement.classList.add('img-done');"
+            onerror="this.parentElement.classList.add('img-done');this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'card-img-placeholder\\'>🎮</div>');" />`
+    : `<div class="card-img-placeholder">🎮</div>`;
+
+  const overlays = `
+        <div class="card-overlay-top">
+          <div class="card-badges">
+            <span class="badge ${badgeClass(g.console)}">${g.console}</span>
+            <span class="badge badge-region-${g.region.toLowerCase()}">${g.region}</span>
+          </div>
+          ${soldOut ? '<span class="sold-out-badge">Sold Out</span>' : ''}
+        </div>
+        <div class="card-overlay-bottom">
+          <div class="card-name">${g.name}</div>
+          <div class="price">${formatPrice(g.price)}</div>
+        </div>`;
+
+  const imgWrap = g.img
+    ? `<a class="card-img-wrap" href="${src}" target="_blank" rel="noopener">${imgInner}${overlays}</a>`
+    : `<div class="card-img-wrap">${imgInner}${overlays}</div>`;
+
+  return `
+    <div class="card${soldOut ? ' sold-out' : ''}">
+      ${imgWrap}
+      <div class="card-action">
+        <a class="order-btn" href="${WA}${waMsg}" target="_blank" rel="noopener">
+          ${waIcon} Order via WA
+        </a>
+      </div>
+    </div>`;
+}
+
+function renderPage() {
+  const grid     = document.getElementById('grid');
+  const none     = document.getElementById('no-results');
+  const count    = document.getElementById('count');
+  const lmWrap   = document.getElementById('load-more-wrap');
+
+  if (currentList.length === 0) {
+    grid.innerHTML = '';
+    none.style.display = 'block';
+    lmWrap.style.display = 'none';
+    count.textContent = 'No results';
+    return;
+  }
+
+  none.style.display = 'none';
+  const slice = currentList.slice(0, visibleCount);
+  grid.innerHTML = slice.map(buildCard).join('');
+
+  const hasMore = visibleCount < currentList.length;
+  lmWrap.style.display = hasMore ? 'block' : 'none';
+  count.textContent = `Showing ${slice.length} of ${currentList.length} games`;
+}
+
+function render() {
+  const q    = document.getElementById('search').value.trim().toLowerCase();
+  const sort = document.getElementById('sort').value;
+
+  currentList = GAMES.filter(g => {
+    if (activeConsole !== 'all' && g.console !== activeConsole) return false;
+    if (activeRegion  !== 'all' && g.region  !== activeRegion)  return false;
+    if (q && !g.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (sort === 'name')       currentList.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === 'price-asc')  currentList.sort((a,b) => a.price - b.price);
+  if (sort === 'price-desc') currentList.sort((a,b) => b.price - a.price);
+
+  visibleCount = PAGE_SIZE;
+  renderPage();
+}
+
+// Console filter
+document.getElementById('console-filter').addEventListener('click', e => {
+  const btn = e.target.closest('[data-console]');
+  if (!btn) return;
+  document.querySelectorAll('#console-filter .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  activeConsole = btn.dataset.console;
+  render();
+});
+
+// Region filter
+document.getElementById('region-filter').addEventListener('click', e => {
+  const btn = e.target.closest('[data-region]');
+  if (!btn) return;
+  document.querySelectorAll('#region-filter .pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  activeRegion = btn.dataset.region;
+  render();
+});
+
+document.getElementById('search').addEventListener('input', render);
+document.getElementById('sort').addEventListener('change', render);
+
+document.getElementById('load-more-btn').addEventListener('click', () => {
+  visibleCount += PAGE_SIZE;
+  renderPage();
+});
+
+render();
+</script>
+</body>
+</html>
